@@ -1,5 +1,6 @@
 import rospy
 from std_srvs.srv import Empty, EmptyResponse
+from geometry_msgs.msg import PoseStamped
 
 # Callback handlers
 def handle_launch():
@@ -31,6 +32,21 @@ def callback_abort(request):
     handle_abort()
     return EmptyResponse()
 
+def callback_vicon(vicon_msg):
+    pass
+
+def vicon_running(topic_name='vicon/ROB498_Drone/ROB498_Drone'):
+    # Get a list of tuples containing the names and data types of all the topics that are currently published
+    published_topics = rospy.get_published_topics()
+
+    # Check if the topic exists by searching for its name in the list of published topics
+    if any(topic_name in topic for topic in published_topics):
+        print(f"The topic '{topic_name}' exists, using vicon.")
+        return True
+    else:
+        print(f"The topic '{topic_name}' does not exist, not using vicon.")
+        return False
+
 # Main communication node for ground control
 def comm_node():
     print('This is a dummy drone node to test communication with the ground control')
@@ -43,7 +59,12 @@ def comm_node():
     srv_land = rospy.Service('comm/land', Empty, callback_land)
     srv_abort = rospy.Service('comm/abort', Empty, callback_abort)
 
-    # Your code goes below
+    if vicon_running():
+        # Subscribe to the vicon topic /vicon/ROB498_Drone/ROB498_Drone
+        rospy.Subscriber('vicon/ROB498_Drone/ROB498_Drone', PoseStamped, callback_vicon)
+    else:
+        # Use data from the RealSense camera
+        pass
 
     rospy.spin()
 
